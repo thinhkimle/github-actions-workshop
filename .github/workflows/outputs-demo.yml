@@ -1,0 +1,105 @@
+name: Outputs Demo Workflow
+
+on:
+  - push
+
+jobs:
+  info:
+    name: Info
+    runs-on: ubuntu-latest
+    outputs:
+      commit_sha: ${{ steps.get_sha.outputs.sha }}
+      branch_name: ${{ steps.get_branch.outputs.branch }}
+      commit_message: ${{ steps.get_message.outputs.commit_message }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Get git commit SHA
+        id: get_sha
+        run: |
+          sha=$(git rev-parse HEAD)
+          echo "✓ Captured commit SHA: $sha"
+          echo "sha=$sha" >> $GITHUB_OUTPUT
+
+      - name: Get branch name
+        id: get_branch
+        run: |
+          branch=$(git rev-parse --abbrev-ref HEAD)
+          echo "✓ Captured branch name: $branch"
+          echo "branch=$branch" >> $GITHUB_OUTPUT
+
+      - name: Get commit message
+        id: get_message
+        run: |
+          commit_message=$(git log -1 --pretty=%B)
+          echo "✓ Captured commit message: $commit_message"
+          echo "commit_message=$commit_message" >> $GITHUB_OUTPUT
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: info
+    outputs:
+      report: ${{ steps.report.outputs.report }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Display Git Information
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "📋 Git Information"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "📌 Commit SHA: ${{ needs.info.outputs.commit_sha }}"
+          echo "🌿 Branch Name: ${{ needs.info.outputs.branch_name }}"
+          echo "💬 Commit Message: ${{ needs.info.outputs.commit_message }}"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+      - name: Install dependencies
+        run: |
+          echo "📦 Installing dependencies..."
+          npm ci
+          echo "✓ Dependencies installed successfully"
+
+      - name: Build
+        run: |
+          echo "🔨 Building project..."
+          npm run build
+          echo "✓ Build completed successfully"
+
+      - name: Report
+        id: report
+        run: |
+          echo "📊 Generating build report..."
+          {
+            echo "report<<EOF"
+            echo "🟢 Node.js version: $(node -v)"
+            echo "🟢 NPM version: $(npm -v)"
+            echo "🟢 Build successful for commit ${{ needs.info.outputs.commit_sha }} on branch ${{ needs.info.outputs.branch_name }}"
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+          echo "✓ Report generated"
+
+  summary:
+    name: Summary
+    runs-on: ubuntu-latest
+    needs: [ info, build ]
+    steps:
+      - name: Display Summary
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "📊 Workflow Summary"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          echo "📋 Git Information:"
+          echo "  📌 Commit SHA: ${{ needs.info.outputs.commit_sha }}"
+          echo "  🌿 Branch Name: ${{ needs.info.outputs.branch_name }}"
+          echo "  💬 Commit Message: ${{ needs.info.outputs.commit_message }}"
+          echo ""
+          echo "📦 Build Report:"
+          echo "${{ needs.build.outputs.report }}"
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "✅ Workflow completed successfully"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
