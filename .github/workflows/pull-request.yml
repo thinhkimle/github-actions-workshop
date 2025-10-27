@@ -1,0 +1,16 @@
+name: Pull Request Workflow 🔀
+on:
+  - pull_request
+
+jobs:
+  say-hello:
+    name: Greet on Pull Request
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Print greeting for PR
+        run: echo "Hello, GitHub Actions! A pull request has been opened or updated."
+
+      - name: Print Hello
+        run: echo "Hello from the Pull Request Workflow!"
