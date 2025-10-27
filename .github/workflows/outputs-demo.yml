@@ -1,0 +1,34 @@
+name: Outputs Demo Workflow
+
+on:
+  - push
+
+jobs:
+  info:
+    name: Info
+    runs-on: ubuntu-latest
+    outputs:
+      commit_sha: ${{ steps.get_sha.outputs.sha }}
+      branch_name: ${{ steps.get_branch.outputs.branch }}
+      commit_message: ${{ steps.get_message.outputs.commit_message }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Get git commit SHA
+        id: get_sha
+        run: |
+          sha=$(git rev-parse HEAD)
+          echo "sha=$sha" >> $GITHUB_OUTPUT
+
+      - name: Get branch name
+        id: get_branch
+        run: |
+          branch=$(git rev-parse --abbrev-ref HEAD)
+          echo "branch=$branch" >> $GITHUB_OUTPUT
+
+      - name: Get commit message
+        id: get_message
+        run: |
+          commit_message=$(git log -1 --pretty=%B)
+          echo "commit_message=$commit_message" >> $GITHUB_OUTPUT
