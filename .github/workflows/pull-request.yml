@@ -4,8 +4,6 @@ on:
 
 jobs:
   say-hello:
-    name: Greet on Pull Request
-
     runs-on: ubuntu-latest
 
     steps:
